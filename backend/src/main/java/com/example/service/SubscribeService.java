@@ -12,6 +12,13 @@ import java.util.List;
 @Service
 public class SubscribeService {
 
+    // Every ATS the scheduler polls. New users are auto-subscribed to all of
+    // them so the feed is populated without any setup. Must match the fetcher
+    // case labels (and the job's `ats` field) in the scheduler.
+    public static final List<String> DEFAULT_ATS = List.of(
+        "greenhouse", "lever", "ashby", "smartrecruiters", "recruitee",
+        "workable", "teamtailor", "workday", "remotive", "remoteok", "arbeitnow");
+
     private final SubscribeRepository subscribeRepository;
     private final UserRepository userRepository;
 
@@ -27,4 +34,8 @@ public class SubscribeService {
         subscribeRepository.saveUserCompanies(user.id(), companies);
     }
 
+    /** Subscribe a user to every ATS — the default for new accounts. */
+    public void subscribeToDefaults(String username) {
+        subscribeToCompanies(username, DEFAULT_ATS);
+    }
 }

@@ -4,10 +4,8 @@ import { Client } from '@stomp/stompjs';
 
 import api from '../../api';
 import { getToken, getUsername, clearAuth } from '../../auth';
-import { ATS_LIST } from '../../ats';
+import ResumePanel from './ResumePanel';
 import './Dashboard.css';
-
-const subsKey = (username) => `subscriptions:${username}`;
 
 const jobKey = (job) => job.url || `${job.company}|${job.title}`;
 
@@ -111,35 +109,49 @@ const formatFound = (iso) => {
   });
 };
 
-const loadSavedSubs = (username) => {
-  try {
-    return JSON.parse(localStorage.getItem(subsKey(username))) ?? {};
-  } catch {
-    return {};
-  }
-};
-
 const Dashboard = () => {
   const navigate = useNavigate();
   const username = getUsername();
 
   const [jobs, setJobs] = useState([]);
   const [connected, setConnected] = useState(false);
-  const [subs, setSubs] = useState(() => loadSavedSubs(username));
-  const [filterAts, setFilterAts] = useState(null);         // null = show all
+  const [filterAts, setFilterAts] = useState(null);          // null = all ATSes
   const [filterLevel, setFilterLevel] = useState('');        // '' = all levels
   const [filterCountry, setFilterCountry] = useState('');    // '' = all locations
   const [sortBy, setSortBy] = useState('found');    // 'found' | 'posted', newest first
-  const [saving, setSaving] = useState(false);
-  const [saveMsg, setSaveMsg] = useState(null);
-  const [error, setError] = useState(null);
+  const [resume, setResume] = useState(null);
+  const [resumeOpen, setResumeOpen] = useState(false);
+  const [tailoring, setTailoring] = useState(null); // { job, status, result?, error? }
 
   // Initial snapshot over REST
   useEffect(() => {
     api.get('/api/dashboard')
       .then((res) => setJobs(res.data))
-      .catch(() => setError('Failed to load your dashboard'));
+      .catch(() => {});
+
+    // A 204 (no résumé yet) resolves with empty data — leave resume null.
+    api.get('/api/resume')
+      .then((res) => setResume(res.data || null))
+      .catch(() => {});
   }, []);
+
+  const handleTailor = (job) => {
+    setResumeOpen(true);
+    if (!resume) {
+      setTailoring(null);
+      return; // panel shows the import form
+    }
+    setTailoring({ job, status: 'loading' });
+    api.post('/api/resume/tailor', {
+      company: job.company, ats: job.ats, title: job.title,
+      location: job.location, department: job.department, url: job.url,
+    })
+      .then((res) => setTailoring({ job, status: 'done', result: res.data }))
+      .catch((err) => setTailoring({
+        job, status: 'error',
+        error: err?.response?.data?.message || 'Failed to tailor your résumé',
+      }));
+  };
 
   // Live updates over STOMP/WebSocket
   useEffect(() => {
@@ -163,17 +175,6 @@ const Dashboard = () => {
     return () => { client.deactivate(); };
   }, []);
 
-  // Static checklist: every ATS the scheduler can poll, unticked unless saved
-  const atsList = useMemo(
-    () => ATS_LIST.map((name) => [name, subs[name] === true]),
-    [subs]
-  );
-
-  const subscribedAts = useMemo(
-    () => atsList.filter(([, checked]) => checked).map(([name]) => name),
-    [atsList]
-  );
-
   // Dropdown options come from the jobs actually on the dashboard,
   // so you never pick a filter that matches nothing.
   const levelOptions = useMemo(() => {
@@ -186,6 +187,12 @@ const Dashboard = () => {
     [jobs]
   );
 
+  // ATS filter options come from the ATSes actually present in the feed.
+  const atsOptions = useMemo(
+    () => [...new Set(jobs.map((j) => j.ats).filter(Boolean))].sort(),
+    [jobs]
+  );
+
   const visibleJobs = useMemo(() => {
     const filtered = jobs.filter((j) =>
       (!filterAts || j.ats === filterAts) &&
@@ -195,28 +202,6 @@ const Dashboard = () => {
     const key = sortKeys[sortBy];
     return [...filtered].sort((a, b) => key(b) - key(a));
   }, [jobs, filterAts, filterLevel, filterCountry, sortBy]);
-
-  const toggleAts = (name, checked) => {
-    setSaveMsg(null);
-    setSubs((prev) => ({ ...prev, [name]: checked }));
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    setSaveMsg(null);
-    setError(null);
-
-    try {
-      await api.post('/api/subscribe', { companies: subscribedAts });
-      localStorage.setItem(subsKey(username), JSON.stringify(subs));
-      setSaveMsg('Subscriptions saved');
-      if (filterAts && !subscribedAts.includes(filterAts)) setFilterAts(null);
-    } catch {
-      setError('Failed to save subscriptions');
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const handleLogout = () => {
     clearAuth();
@@ -231,32 +216,9 @@ const Dashboard = () => {
             <span className='sidebar-logo-icon'>SWE</span>
             <span className='sidebar-logo-text'>SWE Job Feed</span>
           </Link>
-
-          <div className='company-panel'>
-            <p className='company-panel-label'>Job boards</p>
-
-            <ul className='company-list'>
-              {atsList.map(([name, checked]) => (
-                <li key={name} className='company-item'>
-                  <label>
-                    <input
-                      type='checkbox'
-                      checked={checked}
-                      onChange={(e) => toggleAts(name, e.target.checked)}
-                    />
-                    <span>{name}</span>
-                  </label>
-                </li>
-              ))}
-            </ul>
-
-            {error && <p className='company-error'>{error}</p>}
-            {saveMsg && <p className='company-saved'>{saveMsg}</p>}
-
-            <button className='company-save' onClick={handleSave} disabled={saving}>
-              {saving ? 'Saving...' : 'Save subscriptions'}
-            </button>
-          </div>
+          <p className='sidebar-tagline'>
+            US software-engineering roles from across the web, updated live as they’re posted.
+          </p>
         </div>
 
         <div className='dashboard-sidebar-bottom'>
@@ -271,14 +233,22 @@ const Dashboard = () => {
       <div className='dashboard-feed'>
         <header className='feed-header'>
           <h1 className='feed-title'>Job Feed</h1>
-          <span className={connected ? 'feed-status feed-status--live' : 'feed-status'}>
-            <span className='feed-status-dot' />
-            {connected ? 'Live' : 'Connecting...'}
-          </span>
+          <div className='feed-header-right'>
+            <button
+              className={resumeOpen ? 'resume-toggle resume-toggle--active' : 'resume-toggle'}
+              onClick={() => setResumeOpen((v) => !v)}
+            >
+              {resume ? 'Résumé' : 'Add résumé'}
+            </button>
+            <span className={connected ? 'feed-status feed-status--live' : 'feed-status'}>
+              <span className='feed-status-dot' />
+              {connected ? 'Live' : 'Connecting...'}
+            </span>
+          </div>
         </header>
 
         <div className='feed-toolbar'>
-          {subscribedAts.length > 0 && (
+          {atsOptions.length > 0 && (
             <div className='feed-filters'>
               <button
                 className={filterAts === null ? 'filter-chip filter-chip--active' : 'filter-chip'}
@@ -286,7 +256,7 @@ const Dashboard = () => {
               >
                 All
               </button>
-              {subscribedAts.map((name) => (
+              {atsOptions.map((name) => (
                 <button
                   key={name}
                   className={filterAts === name ? 'filter-chip filter-chip--active' : 'filter-chip'}
@@ -343,7 +313,7 @@ const Dashboard = () => {
         {visibleJobs.length === 0 ? (
           <div className='feed-empty'>
             <p>No jobs yet.</p>
-            <p>Tick some job boards and save — new CS openings will appear here the moment a worker finds them.</p>
+            <p>New US software-engineering roles will appear here the moment a worker finds them.</p>
           </div>
         ) : (
           <ul className='feed-list'>
@@ -360,6 +330,13 @@ const Dashboard = () => {
                   </p>
                 </div>
                 <div className='job-card-side'>
+                  <button
+                    className='job-tailor-btn'
+                    onClick={() => handleTailor(job)}
+                    title='Score and tailor your résumé to this job'
+                  >
+                    Tailor
+                  </button>
                   <div className='job-badges'>
                     {job.live && <span className='job-new-badge'>NEW</span>}
                     {job.ats && <span className='job-ats-badge'>{job.ats}</span>}
@@ -378,6 +355,15 @@ const Dashboard = () => {
           </ul>
         )}
       </div>
+
+      {resumeOpen && (
+        <ResumePanel
+          resume={resume}
+          onSaved={setResume}
+          tailoring={tailoring}
+          onClose={() => setResumeOpen(false)}
+        />
+      )}
     </div>
   );
 };

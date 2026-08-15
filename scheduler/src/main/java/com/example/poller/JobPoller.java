@@ -18,6 +18,7 @@ import java.util.List;
 import com.example.config.PollingTargets;
 import com.example.helpers.AtsFetchers;
 import com.example.helpers.CsJobFilter;
+import com.example.helpers.UsLocationFilter;
 import com.example.model.JobBatch;
 import com.example.model.JobFound;
 
@@ -55,9 +56,10 @@ public class JobPoller implements CommandLineRunner {
                 try {
                     List<JobFound> board = fetchers.fetch(t.getAts(), t.getSlug());
                     List<JobFound> csHits = board.stream().filter(CsJobFilter::isCsJob).toList();
-                    List<JobFound> hits = csHits.stream().filter(JobPoller::isFresh).toList();
+                    List<JobFound> usHits = csHits.stream().filter(j -> UsLocationFilter.isUsa(j.location())).toList();
+                    List<JobFound> hits = usHits.stream().filter(JobPoller::isFresh).toList();
                     jobHits.addAll(hits);
-                    log.info("   {}: {}/{} CS match, {} fresh (posted <= {} days ago)", t, csHits.size(), board.size(), hits.size(), MAX_POSTED_AGE.toDays());
+                    log.info("   {}: {}/{} CS match, {} US, {} fresh (posted <= {} days ago)", t, csHits.size(), board.size(), usHits.size(), hits.size(), MAX_POSTED_AGE.toDays());
                 } catch (Exception e) {
                     
                     String message = t + " -> " + e.getClass().getSimpleName() + ": " + e.getMessage();

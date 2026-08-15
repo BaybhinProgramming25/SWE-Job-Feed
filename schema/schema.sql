@@ -29,3 +29,10 @@ CREATE TABLE IF NOT EXISTS dist_jobs_scheduler.watched_companies(
     company_name VARCHAR(255) NOT NULL,
     PRIMARY KEY (company_name, user_id)
 );
+
+CREATE TABLE IF NOT EXISTS dist_jobs_scheduler.resumes(
+    user_id BIGINT PRIMARY KEY REFERENCES dist_jobs_scheduler.users(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    filename VARCHAR(255),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

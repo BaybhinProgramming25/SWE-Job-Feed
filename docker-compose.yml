@@ -65,6 +65,7 @@ services:
       RABBITMQ_HOST: rabbitmq
       APP_JWT_SECRET: ${APP_JWT_SECRET}
       APP_ALLOWED_ORIGIN: ${APP_ALLOWED_ORIGIN}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=75.0
     depends_on:
       cockroachdb:

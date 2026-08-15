@@ -18,11 +18,14 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final SubscribeService subscribeService;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,
+                       JwtService jwtService, SubscribeService subscribeService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.subscribeService = subscribeService;
     }
 
     public SignupResponse signup(SignupRequest request) {
@@ -42,6 +45,9 @@ public class UserService {
 
         String hash = passwordEncoder.encode(request.password());
         User saved = userRepository.save(request.username(), request.email(), hash, request.phoneNumber());
+
+        // Auto-subscribe new accounts to every ATS so the feed is populated.
+        subscribeService.subscribeToDefaults(saved.username());
 
         String token = jwtService.generateToken(saved.username());
         return new SignupResponse(saved.id(), saved.username(), saved.email(), token);
