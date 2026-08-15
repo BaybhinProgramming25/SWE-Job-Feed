@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Client } from '@stomp/stompjs';
 
 import api from '../../api';
@@ -212,10 +212,6 @@ const Dashboard = () => {
     <div className='dashboard'>
       <aside className='dashboard-sidebar'>
         <div className='dashboard-sidebar-top'>
-          <Link to='/' className='sidebar-logo'>
-            <span className='sidebar-logo-icon'>SWE</span>
-            <span className='sidebar-logo-text'>SWE Job Feed</span>
-          </Link>
           <p className='sidebar-tagline'>
             US software-engineering roles from across the web, updated live as they’re posted.
           </p>
