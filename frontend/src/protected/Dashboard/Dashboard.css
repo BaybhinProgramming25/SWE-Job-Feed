@@ -771,6 +771,125 @@
   gap: 8px;
 }
 
+/* Requirement gap analysis: what the job wants vs. what the résumé has */
+.gap-wrap {
+  margin-top: 4px;
+}
+
+.gap-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  margin: 0 0 8px;
+}
+
+.gap-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.gap-col {
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+}
+
+.gap-col--have {
+  border-top: 3px solid var(--success);
+}
+
+.gap-col--missing {
+  border-top: 3px solid var(--danger);
+}
+
+.gap-col-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+}
+
+.gap-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.gap-col--have .gap-count {
+  background-color: var(--accent-subtle);
+  color: var(--accent-hover);
+}
+
+.gap-col--missing .gap-count {
+  background-color: rgba(239, 68, 68, 0.16);
+  color: #fca5a5;
+}
+
+.gap-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gap-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: var(--text-primary);
+}
+
+.gap-col--have .gap-item::before {
+  content: '✓';
+  color: var(--success);
+  font-weight: 700;
+}
+
+.gap-col--missing .gap-item::before {
+  content: '+';
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.gap-skill {
+  flex: 1;
+}
+
+.gap-tag {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-secondary);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  padding: 1px 7px;
+  white-space: nowrap;
+}
+
+.gap-empty {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
 /* Rendered résumé "page" (looks like a printed document) */
 .resume-view-head {
   display: flex;

@@ -23,10 +23,13 @@ public record TailorResponse(
     String rationale,
 
     @JsonPropertyDescription(
-        "The tailored resume in Markdown. It MUST fit on one page (roughly 600 "
-      + "words or fewer), keep the SAME sections, ordering, and overall "
-      + "structure as the original resume, and stay truthful — rephrase and "
-      + "reprioritize the candidate's real experience toward this posting, never "
-      + "invent employers, titles, dates, or skills.")
+        "The tailored resume in Markdown. It MUST be visually indistinguishable "
+      + "in FORMAT from the original resume: the same heading levels, the same "
+      + "section titles and order, the same contact-line and entry-header layout, "
+      + "and roughly the same number and length of bullet points per entry (do "
+      + "not expand or pad). It MUST fit on one page (roughly 600 words or fewer) "
+      + "and stay truthful — rephrase and reprioritize the candidate's real "
+      + "experience toward this posting, never invent employers, titles, dates, "
+      + "or skills.")
     String tailoredResume
 ) {}

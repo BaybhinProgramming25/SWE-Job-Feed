@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import com.example.dto.AnalysisResponse;
 import com.example.dto.Resume;
 import com.example.dto.ResumeUploadRequest;
 import com.example.dto.TailorRequest;
@@ -29,6 +30,11 @@ public class ResumeController {
     @PostMapping("/api/resume")
     public Resume saveResume(@RequestBody ResumeUploadRequest request, Authentication authentication) {
         return resumeService.save(authentication.getName(), request);
+    }
+
+    @PostMapping("/api/resume/analyze")
+    public AnalysisResponse analyzeResume(@RequestBody TailorRequest request, Authentication authentication) {
+        return resumeService.analyze(authentication.getName(), request);
     }
 
     @PostMapping("/api/resume/tailor")

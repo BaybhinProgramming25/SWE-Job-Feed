@@ -17,6 +17,8 @@ import com.anthropic.models.messages.DocumentBlockParam;
 import com.anthropic.models.messages.MessageCreateParams;
 import com.anthropic.models.messages.StructuredMessageCreateParams;
 import com.anthropic.models.messages.TextBlockParam;
+import com.example.dto.AnalysisResponse;
+import com.example.dto.SkillRequirement;
 import com.example.dto.TailorRequest;
 import com.example.dto.TailorResponse;
 
@@ -59,10 +61,21 @@ public class AiResumeService {
         candidate's current resume (Markdown) and a software-engineering job
         posting. Produce a match score and a tailored resume.
 
+        Treat the candidate's original resume as the exact FORMATTING TEMPLATE:
+        the tailored resume must be visually indistinguishable from it in layout,
+        so the two can be compared side by side.
+
         Rules for the tailored resume:
-        - Keep it to ONE page (about 600 words or fewer).
-        - Keep the SAME sections, ordering, and overall structure/format as the
-          original resume.
+        - Mirror the original's structure EXACTLY: the same heading levels, the
+          same section titles and the same section order, the same contact-line
+          format, and the same entry-header layout. Do not add, drop, rename, or
+          reorder sections that exist in the original.
+        - Keep the SAME proportions: for each entry, keep roughly the same number
+          of bullet points as the original (do not expand 2 bullets into 6), and
+          keep each bullet to a similar length. Only rephrase the existing content
+          toward the posting — do not pad it out.
+        - Keep it to ONE page (about 600 words or fewer), matching the original's
+          overall length.
         - Stay strictly truthful: rephrase and reprioritize the candidate's real
           experience and skills toward this posting. Never invent employers,
           titles, dates, degrees, or skills the candidate does not have.
@@ -73,6 +86,23 @@ public class AiResumeService {
         already matches the posting.
 
         %s""".formatted(ENTRY_FORMAT);
+
+    private static final String ANALYZE_SYSTEM = """
+        You are an expert technical recruiter. You are given a candidate's current
+        resume (Markdown) and a software-engineering job posting. Do NOT rewrite
+        the resume. Instead:
+
+        1. Give a 0-100 confidence score for how closely the candidate's CURRENT
+           resume already matches the posting (low = far apart, high = very close).
+        2. Extract the posting's concrete requirements — programming languages,
+           frameworks, tools, cloud/infra, years and level of experience, and
+           education. Pick the 6-14 most important.
+        3. For each requirement, decide matched=true ONLY when the current resume
+           clearly evidences it; otherwise matched=false. Add a short note: where
+           the resume shows it, or what is missing.
+
+        Be strict and truthful — do not mark something matched on a weak or absent
+        signal.""";
 
     private volatile AnthropicClient client;
 
@@ -126,36 +156,48 @@ public class AiResumeService {
         }
     }
 
+    /**
+     * Phase one: score the resume and break the posting into requirements, each
+     * flagged as already-matched or missing. No rewriting happens here.
+     */
+    public AnalysisResponse analyze(String resume, TailorRequest job, String jobDescription) {
+
+        StructuredMessageCreateParams<AnalysisResponse> params = MessageCreateParams.builder()
+            .model(MODEL)
+            .maxTokens(8_000L)
+            .system(ANALYZE_SYSTEM)
+            .addUserMessage(buildUserPrompt(resume, job, jobDescription))
+            .outputConfig(AnalysisResponse.class)
+            .build();
+
+        try {
+            AnalysisResponse result = client().messages().create(params).content().stream()
+                .flatMap(block -> block.text().stream())
+                .map(text -> text.text())
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_GATEWAY,
+                    "The model returned no analysis."));
+
+            int score = Math.max(0, Math.min(100, result.score()));
+            List<SkillRequirement> reqs = result.requirements() == null ? List.of() : result.requirements();
+            return new AnalysisResponse(score, result.rationale(), reqs);
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Resume analysis failed", e);
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
+                "Failed to analyze the resume: " + e.getMessage());
+        }
+    }
+
     /** Score + tailor {@code resume} against one posting. */
     public TailorResponse tailor(String resume, TailorRequest job, String jobDescription) {
-
-        String jd = (jobDescription == null || jobDescription.isBlank())
-            ? "(The full description could not be retrieved. Use the job metadata below.)"
-            : jobDescription;
-
-        String user = """
-            === CANDIDATE RESUME (Markdown) ===
-            %s
-
-            === JOB POSTING ===
-            Title: %s
-            Company: %s
-            Location: %s
-            Department: %s
-            URL: %s
-
-            Description:
-            %s
-            """.formatted(
-                resume,
-                nz(job.title()), nz(job.company()), nz(job.location()),
-                nz(job.department()), nz(job.url()), jd);
 
         StructuredMessageCreateParams<TailorResponse> params = MessageCreateParams.builder()
             .model(MODEL)
             .maxTokens(20_000L)
             .system(TAILOR_SYSTEM)
-            .addUserMessage(user)
+            .addUserMessage(buildUserPrompt(resume, job, jobDescription))
             .outputConfig(TailorResponse.class)
             .build();
 
@@ -176,6 +218,31 @@ public class AiResumeService {
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
                 "Failed to tailor the resume: " + e.getMessage());
         }
+    }
+
+    /** Shared prompt body: the candidate resume plus the posting metadata + description. */
+    private static String buildUserPrompt(String resume, TailorRequest job, String jobDescription) {
+        String jd = (jobDescription == null || jobDescription.isBlank())
+            ? "(The full description could not be retrieved. Use the job metadata below.)"
+            : jobDescription;
+
+        return """
+            === CANDIDATE RESUME (Markdown) ===
+            %s
+
+            === JOB POSTING ===
+            Title: %s
+            Company: %s
+            Location: %s
+            Department: %s
+            URL: %s
+
+            Description:
+            %s
+            """.formatted(
+                resume,
+                nz(job.title()), nz(job.company()), nz(job.location()),
+                nz(job.department()), nz(job.url()), jd);
     }
 
     private static String nz(String s) {

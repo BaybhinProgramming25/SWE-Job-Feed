@@ -27,7 +27,7 @@ public class JobPoller implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(JobPoller.class);
     private static final Duration BETWEEN_BOARDS = Duration.ofMillis(800);
-    private static final Duration MAX_POSTED_AGE = Duration.ofDays(3);
+    private static final Duration MAX_POSTED_AGE = Duration.ofDays(7);
 
     private final PollingTargets targets;
     private final AtsFetchers fetchers;

@@ -135,20 +135,34 @@ const Dashboard = () => {
       .catch(() => {});
   }, []);
 
+  const jobBody = (job) => ({
+    company: job.company, ats: job.ats, title: job.title,
+    location: job.location, department: job.department, url: job.url,
+  });
+
+  // Phase 1: score + requirement gap analysis. No rewrite yet.
   const handleTailor = (job) => {
     setResumeOpen(true);
     if (!resume) {
       setTailoring(null);
       return; // panel shows the import form
     }
-    setTailoring({ job, status: 'loading' });
-    api.post('/api/resume/tailor', {
-      company: job.company, ats: job.ats, title: job.title,
-      location: job.location, department: job.department, url: job.url,
-    })
-      .then((res) => setTailoring({ job, status: 'done', result: res.data }))
+    setTailoring({ job, status: 'analyzing' });
+    api.post('/api/resume/analyze', jobBody(job))
+      .then((res) => setTailoring({ job, status: 'analyzed', analysis: res.data }))
       .catch((err) => setTailoring({
         job, status: 'error',
+        error: err?.response?.data?.message || 'Failed to analyze your résumé',
+      }));
+  };
+
+  // Phase 2: user opted in — generate the tailored one-page résumé.
+  const handleGenerate = (job, analysis) => {
+    setTailoring({ job, analysis, status: 'generating' });
+    api.post('/api/resume/tailor', jobBody(job))
+      .then((res) => setTailoring({ job, analysis, status: 'done', result: res.data }))
+      .catch((err) => setTailoring({
+        job, analysis, status: 'error',
         error: err?.response?.data?.message || 'Failed to tailor your résumé',
       }));
   };
@@ -357,6 +371,7 @@ const Dashboard = () => {
           resume={resume}
           onSaved={setResume}
           tailoring={tailoring}
+          onGenerate={handleGenerate}
           onClose={() => setResumeOpen(false)}
         />
       )}

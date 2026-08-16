@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.example.dto.AnalysisResponse;
 import com.example.dto.Resume;
 import com.example.dto.ResumeUploadRequest;
 import com.example.dto.TailorRequest;
@@ -45,6 +46,17 @@ public class ResumeService {
 
     public Optional<Resume> get(String username) {
         return repository.findByUsername(username);
+    }
+
+    /** Phase one: score + requirement gap analysis, without rewriting the resume. */
+    public AnalysisResponse analyze(String username, TailorRequest job) {
+
+        Resume resume = repository.findByUsername(username)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "Import a resume before analyzing it against a job."));
+
+        String jd = jobDescriptions.fetch(job.url());
+        return ai.analyze(resume.content(), job, jd);
     }
 
     /** Fetch the posting text and tailor the user's stored resume to it. */

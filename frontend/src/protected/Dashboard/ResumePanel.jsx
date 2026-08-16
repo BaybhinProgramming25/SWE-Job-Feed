@@ -7,6 +7,55 @@ const ResumeDocument = ({ markdown }) => (
   <div className='resume-doc-rendered' dangerouslySetInnerHTML={{ __html: mdToHtml(markdown) }} />
 );
 
+// Score + rationale header, shared by the analysis and the final tailored view.
+const ScoreBlock = ({ score, rationale }) => (
+  <>
+    <div className={`score-ring ${scoreClass(score)}`}>
+      <span className='score-num'>{score}</span>
+      <span className='score-den'>/100</span>
+    </div>
+    <p className='score-caption'>Match of your current résumé to this posting</p>
+    {rationale && <p className='tailor-rationale'>{rationale}</p>}
+  </>
+);
+
+// Side-by-side requirement gap analysis: what the job wants vs. what you have.
+const GapAnalysis = ({ requirements }) => {
+  const reqs = requirements || [];
+  const have = reqs.filter((r) => r.matched);
+  const missing = reqs.filter((r) => !r.matched);
+
+  const Column = ({ title, items, kind }) => (
+    <div className={`gap-col gap-col--${kind}`}>
+      <p className='gap-col-head'>
+        {title} <span className='gap-count'>{items.length}</span>
+      </p>
+      {items.length === 0 ? (
+        <p className='gap-empty'>—</p>
+      ) : (
+        <ul className='gap-list'>
+          {items.map((r, i) => (
+            <li key={i} className='gap-item' title={r.note || ''}>
+              <span className='gap-skill'>{r.skill}</span>
+              {r.category && <span className='gap-tag'>{r.category}</span>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+
+  return (
+    <div className='gap-wrap'>
+      <p className='gap-title'>Requirements breakdown</p>
+      <div className='gap-cols'>
+        <Column title='You have' items={have} kind='have' />
+        <Column title='To fill' items={missing} kind='missing' />
+      </div>
+    </div>
+  );
+};
+
 const errText = (err) =>
   err?.response?.data?.message ||
   err?.response?.data?.error ||
@@ -34,7 +83,7 @@ const readFile = (file) =>
 const MIN_WIDTH = 340;
 const MAX_WIDTH = 1000;
 
-const ResumePanel = ({ resume, onSaved, tailoring, onClose }) => {
+const ResumePanel = ({ resume, onSaved, tailoring, onGenerate, onClose }) => {
   const fileRef = useRef(null);
   const [editing, setEditing] = useState(false);
   const [pasteText, setPasteText] = useState('');
@@ -128,20 +177,38 @@ const ResumePanel = ({ resume, onSaved, tailoring, onClose }) => {
               {t.job.location ? ` · ${t.job.location}` : ''}
             </p>
 
-            {t.status === 'loading' && (
-              <p className='tailor-loading'>Tailoring your résumé… this can take up to a minute.</p>
+            {t.status === 'analyzing' && (
+              <p className='tailor-loading'>Analyzing the posting against your résumé…</p>
             )}
             {t.status === 'error' && <p className='resume-error'>{t.error}</p>}
 
-            {t.status === 'done' && (
+            {/* Phase 1 result: confidence score + requirement gap analysis. */}
+            {t.analysis && (
               <>
-                <div className={`score-ring ${scoreClass(t.result.score)}`}>
-                  <span className='score-num'>{t.result.score}</span>
-                  <span className='score-den'>/100</span>
-                </div>
-                <p className='score-caption'>Match of your current résumé to this posting</p>
-                {t.result.rationale && <p className='tailor-rationale'>{t.result.rationale}</p>}
+                <ScoreBlock score={t.analysis.score} rationale={t.analysis.rationale} />
+                <GapAnalysis requirements={t.analysis.requirements} />
 
+                {/* The generate step is opt-in — shown until it's done. */}
+                {t.status !== 'done' && (
+                  <div className='tailor-actions'>
+                    <button
+                      className='resume-btn resume-btn--primary'
+                      disabled={t.status === 'generating'}
+                      onClick={() => onGenerate(t.job, t.analysis)}
+                    >
+                      {t.status === 'generating' ? 'Generating…' : 'Generate tailored résumé'}
+                    </button>
+                  </div>
+                )}
+                {t.status === 'generating' && (
+                  <p className='tailor-loading'>Tailoring your résumé… this can take up to a minute.</p>
+                )}
+              </>
+            )}
+
+            {/* Phase 2 result: the tailored one-page résumé. */}
+            {t.status === 'done' && t.result && (
+              <>
                 <div className='tailor-actions'>
                   <button
                     className='resume-btn resume-btn--primary'
