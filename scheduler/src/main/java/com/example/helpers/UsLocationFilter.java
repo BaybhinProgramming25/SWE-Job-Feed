@@ -99,6 +99,7 @@ public final class UsLocationFilter {
 
         // Strong signal: an explicit country marker, a state name, or a US city.
         boolean strongUs = US_MARKER.matcher(loc).find()
+                || loc.contains("united states")
                 || containsAny(loc, US_STATES)
                 || containsAny(loc, US_CITIES);
         if (strongUs) return true;

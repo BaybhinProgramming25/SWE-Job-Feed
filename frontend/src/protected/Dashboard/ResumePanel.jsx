@@ -14,7 +14,7 @@ const ScoreBlock = ({ score, rationale }) => (
       <span className='score-num'>{score}</span>
       <span className='score-den'>/100</span>
     </div>
-    <p className='score-caption'>Match of your current résumé to this posting</p>
+    <p className='score-caption'>Match of your current resume to this posting</p>
     {rationale && <p className='tailor-rationale'>{rationale}</p>}
   </>
 );
@@ -160,8 +160,8 @@ const ResumePanel = ({ resume, onSaved, tailoring, onGenerate, onClose }) => {
         title='Drag to resize'
       />
       <header className='resume-panel-head'>
-        <h2 className='resume-panel-title'>Résumé</h2>
-        <button className='resume-close' onClick={onClose} aria-label='Close résumé panel'>
+        <h2 className='resume-panel-title'>Resume</h2>
+        <button className='resume-close' onClick={onClose} aria-label='Close resume panel'>
           ✕
         </button>
       </header>
@@ -178,7 +178,7 @@ const ResumePanel = ({ resume, onSaved, tailoring, onGenerate, onClose }) => {
             </p>
 
             {t.status === 'analyzing' && (
-              <p className='tailor-loading'>Analyzing the posting against your résumé…</p>
+              <p className='tailor-loading'>Analyzing the posting against your resume…</p>
             )}
             {t.status === 'error' && <p className='resume-error'>{t.error}</p>}
 
@@ -196,17 +196,17 @@ const ResumePanel = ({ resume, onSaved, tailoring, onGenerate, onClose }) => {
                       disabled={t.status === 'generating'}
                       onClick={() => onGenerate(t.job, t.analysis)}
                     >
-                      {t.status === 'generating' ? 'Generating…' : 'Generate tailored résumé'}
+                      {t.status === 'generating' ? 'Generating…' : 'Generate tailored resume'}
                     </button>
                   </div>
                 )}
                 {t.status === 'generating' && (
-                  <p className='tailor-loading'>Tailoring your résumé… this can take up to a minute.</p>
+                  <p className='tailor-loading'>Tailoring your resume… this can take up to a minute.</p>
                 )}
               </>
             )}
 
-            {/* Phase 2 result: the tailored one-page résumé. */}
+            {/* Phase 2 result: the tailored one-page resume. */}
             {t.status === 'done' && t.result && (
               <>
                 <div className='tailor-actions'>
@@ -232,7 +232,7 @@ const ResumePanel = ({ resume, onSaved, tailoring, onGenerate, onClose }) => {
         {/* Import / view the stored resume */}
         <section className='resume-card'>
           <div className='resume-card-head'>
-            <p className='resume-card-label'>{showImport ? 'Import résumé' : 'My résumé'}</p>
+            <p className='resume-card-label'>{showImport ? 'Import resume' : 'My resume'}</p>
             {resume && !editing && (
               <button className='resume-link' onClick={() => setEditing(true)}>
                 Replace
@@ -265,7 +265,7 @@ const ResumePanel = ({ resume, onSaved, tailoring, onGenerate, onClose }) => {
               <p className='resume-or'>or paste it</p>
               <textarea
                 className='resume-textarea'
-                placeholder='Paste your résumé (plain text or Markdown)…'
+                placeholder='Paste your resume (plain text or Markdown)…'
                 value={pasteText}
                 onChange={(e) => setPasteText(e.target.value)}
               />
@@ -274,7 +274,7 @@ const ResumePanel = ({ resume, onSaved, tailoring, onGenerate, onClose }) => {
                 disabled={saving || !pasteText.trim()}
                 onClick={() => submit({ content: pasteText, filename: 'pasted.md' })}
               >
-                {saving ? 'Saving…' : 'Save pasted résumé'}
+                {saving ? 'Saving…' : 'Save pasted resume'}
               </button>
               {error && <p className='resume-error'>{error}</p>}
             </>

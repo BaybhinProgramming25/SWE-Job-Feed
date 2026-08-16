@@ -1,4 +1,4 @@
-// Minimal, dependency-free Markdown -> HTML for résumés. The whole input is
+// Minimal, dependency-free Markdown -> HTML for resumes. The whole input is
 // HTML-escaped first, so the only tags in the output are ones we emit — safe to
 // drop into innerHTML without a sanitizer.
 
@@ -90,7 +90,7 @@ export function mdToHtml(md) {
       html += `<li>${inline(m[1])}</li>`;
     } else if ((m = line.match(/^(.+?)\s\|\s(.+)$/))) {
       // "left | right" → a two-column row: left-aligned, right-aligned.
-      // Used for résumé entries (Company | Dates, then Title | Location).
+      // Used for resume entries (Company | Dates, then Title | Location).
       closeList();
       html += `<div class="rz-row"><span class="rz-left">${inline(m[1].trim())}</span>` +
         `<span class="rz-right">${inline(m[2].trim())}</span></div>`;
@@ -104,7 +104,7 @@ export function mdToHtml(md) {
 }
 
 // Print CSS scoped to a US-Letter page — the browser's "Save as PDF" produces a
-// clean résumé from this. The .sheet is exactly one printable page (letter minus
+// clean resume from this. The .sheet is exactly one printable page (letter minus
 // the 0.6in margins); in one-page mode we clip to it and scale the content to
 // fit, guaranteeing a single page.
 const PRINT_CSS = `
@@ -115,7 +115,7 @@ const PRINT_CSS = `
   .sheet { width: 7.3in; }
   .sheet--onepage { height: 9.8in; overflow: hidden; }
   /* Everything below is sized in em, so setting #content font-size scales the
-     whole résumé; width stays fixed so it always fills the page width. */
+     whole resume; width stays fixed so it always fills the page width. */
   #content { width: 7.3in; font-size: 11pt; line-height: 1.4; }
   #content h1 { font-size: 1.85em; margin: 0 0 0.12em; line-height: 1.15; }
   #content .rz-header { text-align: center; margin-bottom: 0.4em; }
@@ -131,7 +131,7 @@ const PRINT_CSS = `
   #content code { font-family: monospace; }
 `;
 
-// Render the résumé into a hidden iframe and open the print dialog (Save as PDF).
+// Render the resume into a hidden iframe and open the print dialog (Save as PDF).
 // The iframe avoids popup blockers that a new window would hit. With
 // `onePage: true`, the content is shrunk to fit a single letter page.
 export function printResume(md, title, { onePage = false } = {}) {

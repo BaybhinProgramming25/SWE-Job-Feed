@@ -41,8 +41,10 @@ public class AtsFetchers {
             case "teamtailor" -> teamtailor(slug);
             case "workday" -> workday(slug);
             case "remotive" -> remotive(slug);
-            case "remoteok" -> remoteOk(); 
+            case "remoteok" -> remoteOk();
             case "arbeitnow" -> arbeitnow();
+            case "amazon" -> amazon();
+            case "netflix" -> netflix();
             default -> throw new IllegalArgumentException("Unknown ATS: " + ats);
         };
     }
@@ -279,5 +281,66 @@ public class AtsFetchers {
                     text(j, "url"), text(j, "created_at")));
         }
         return out;
+    }
+
+    // Amazon self-hosts on amazon.jobs, which exposes a public JSON search.
+    // Results are sorted newest-first so the freshness filter can stop early.
+    private List<JobFound> amazon() throws Exception {
+        List<JobFound> out = new ArrayList<>();
+        int offset = 0, limit = 100;
+        while (true) {
+            JsonNode data = getJson("https://www.amazon.jobs/en/search.json"
+                    + "?base_query=software+engineer&country=USA&sort=recent"
+                    + "&result_limit=" + limit + "&offset=" + offset);
+            JsonNode jobs = data.path("jobs");
+            if (jobs.isEmpty()) break;
+            for (JsonNode j : jobs) {
+                String path = text(j, "job_path");
+                String url = path.startsWith("http") ? path : "https://www.amazon.jobs" + path;
+                out.add(JobFound.of("Amazon", "amazon", text(j, "id_icims"),
+                        text(j, "title"), text(j, "normalized_location"),
+                        text(j, "job_category"), url, usDateToIso(text(j, "posted_date"))));
+            }
+            offset += limit;
+            if (offset >= data.path("hits").asInt(0) || offset >= 500) break;
+            Thread.sleep(500);
+        }
+        return out;
+    }
+
+    // Netflix self-hosts on an Eightfold-powered board with a public JSON API.
+    // t_update is a unix epoch (seconds), which the poller parses directly.
+    private List<JobFound> netflix() throws Exception {
+        List<JobFound> out = new ArrayList<>();
+        int start = 0, num = 100;
+        while (true) {
+            JsonNode data = getJson("https://explore.jobs.netflix.net/api/apply/v2/jobs"
+                    + "?domain=netflix.com&query=software+engineer&location=United+States"
+                    + "&sort_by=recency&num=" + num + "&start=" + start);
+            JsonNode positions = data.path("positions");
+            if (positions.isEmpty()) break;
+            for (JsonNode j : positions) {
+                out.add(JobFound.of("Netflix", "netflix", text(j, "id"),
+                        text(j, "name"), text(j, "location"), text(j, "department"),
+                        text(j, "canonicalPositionUrl"), text(j, "t_update")));
+            }
+            start += num;
+            if (start >= data.path("count").asInt(0) || start >= 500) break;
+            Thread.sleep(500);
+        }
+        return out;
+    }
+
+    // amazon.jobs prints dates like "August 15, 2026"; convert to ISO so the
+    // poller's freshness check (which understands ISO dates) can read it.
+    private static String usDateToIso(String date) {
+        if (date == null || date.isBlank()) return "";
+        try {
+            return java.time.LocalDate
+                    .parse(date.strip(), java.time.format.DateTimeFormatter.ofPattern("MMMM d, yyyy", java.util.Locale.US))
+                    .toString();
+        } catch (Exception e) {
+            return date;
+        }
     }
 }

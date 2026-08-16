@@ -36,3 +36,18 @@ CREATE TABLE IF NOT EXISTS dist_jobs_scheduler.resumes(
     filename VARCHAR(255),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+CREATE TABLE IF NOT EXISTS dist_jobs_scheduler.applications(
+    id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES dist_jobs_scheduler.users(id) ON DELETE CASCADE,
+    company VARCHAR(255),
+    title TEXT,
+    location TEXT,
+    url TEXT,
+    ats VARCHAR(32),
+    status VARCHAR(20) NOT NULL DEFAULT 'applied',   -- applied | interviewing | offer | rejected
+    notes TEXT,
+    applied_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS applications_user_idx ON dist_jobs_scheduler.applications(user_id);

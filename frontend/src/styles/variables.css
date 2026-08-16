@@ -1,19 +1,19 @@
 :root {
-  --bg-app: #0f1226;
-  --bg-sidebar: #090c1c;
-  --bg-input: #1e2348;
-  --bg-card: #171b39;
+  --bg-app: #0d0d0f;
+  --bg-sidebar: #060606;
+  --bg-input: #221e1a;
+  --bg-card: #161311;
 
-  --border-subtle: rgba(160, 178, 255, 0.1);
-  --border-focus: rgba(52, 211, 153, 0.5);
+  --border-subtle: rgba(251, 146, 60, 0.12);
+  --border-focus: rgba(249, 115, 22, 0.55);
 
-  --text-primary: #e6eaf7;
-  --text-secondary: #98a1c4;
+  --text-primary: #f5f0ea;
+  --text-secondary: #a8a29e;
 
-  --accent: #34d399;
-  --accent-hover: #6ee7b7;
-  --accent-subtle: rgba(52, 211, 153, 0.15);
-  --accent-text: #06231a;
+  --accent: #f97316;
+  --accent-hover: #fb923c;
+  --accent-subtle: rgba(249, 115, 22, 0.16);
+  --accent-text: #1a0d00;
 
   --danger: #ef4444;
   --success: #34d399;

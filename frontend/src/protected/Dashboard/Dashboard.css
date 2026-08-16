@@ -489,7 +489,7 @@
   white-space: nowrap;
 }
 
-/* Résumé feature */
+/* Resume feature */
 .feed-header-right {
   display: flex;
   align-items: center;
@@ -532,6 +532,235 @@
 .job-tailor-btn:hover {
   background-color: var(--accent);
   color: var(--accent-text);
+}
+
+.job-card-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.job-track-btn {
+  padding: 6px 14px;
+  background-color: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.job-track-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent-hover);
+}
+
+.job-track-btn--done {
+  background-color: var(--accent-subtle);
+  border-color: var(--accent);
+  color: var(--accent-hover);
+  cursor: default;
+}
+
+/* Sidebar navigation between the feed and the application tracker */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 22px;
+}
+
+.sidebar-nav-item {
+  text-align: left;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.sidebar-nav-item:hover {
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+}
+
+.sidebar-nav-item--active {
+  background-color: var(--accent-subtle);
+  color: var(--accent-hover);
+}
+
+/* ---- Application tracker ---- */
+.tracker {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.tracker-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-top: 3px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  text-align: left;
+  transition: border-color 0.15s, transform 0.1s;
+}
+
+.stat-card:not(:disabled):hover {
+  transform: translateY(-2px);
+}
+
+.stat-card--active {
+  border-color: var(--accent);
+}
+
+.stat-value {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.stat-card--total     { border-top-color: var(--accent); }
+.stat-card--today     { border-top-color: #60a5fa; }
+.stat-card--interviewing { border-top-color: #f6c453; }
+.stat-card--offer     { border-top-color: var(--success); }
+.stat-card--rejected  { border-top-color: var(--danger); }
+
+.tracker-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.tracker-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tracker-add-btn {
+  white-space: nowrap;
+}
+
+.tracker-add-form {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 14px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.tracker-input {
+  flex: 1 1 140px;
+  padding: 8px 10px;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.app-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.app-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.app-main {
+  min-width: 0;
+}
+
+.app-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+a.app-title:hover {
+  color: var(--accent-hover);
+}
+
+.app-meta {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+}
+
+.app-company {
+  color: var(--text-primary);
+}
+
+.app-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.app-status {
+  padding: 6px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.app-status--applied      { border-color: rgba(96, 165, 250, 0.5); color: #93c5fd; }
+.app-status--interviewing { border-color: rgba(246, 196, 83, 0.5); color: #f6c453; }
+.app-status--offer        { border-color: var(--accent); color: var(--accent-hover); }
+.app-status--rejected     { border-color: rgba(239, 68, 68, 0.5); color: #fca5a5; }
+
+.app-delete {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.app-delete:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: var(--danger);
 }
 
 /* Panel */
@@ -771,7 +1000,7 @@
   gap: 8px;
 }
 
-/* Requirement gap analysis: what the job wants vs. what the résumé has */
+/* Requirement gap analysis: what the job wants vs. what the resume has */
 .gap-wrap {
   margin-top: 4px;
 }
@@ -890,7 +1119,7 @@
   margin: 0;
 }
 
-/* Rendered résumé "page" (looks like a printed document) */
+/* Rendered resume "page" (looks like a printed document) */
 .resume-view-head {
   display: flex;
   align-items: center;
@@ -930,7 +1159,7 @@
 .resume-doc-rendered hr { border: none; border-top: 1px solid #e0e0e6; margin: 10px 0; }
 .resume-doc-rendered code { background: #eef; padding: 0 4px; border-radius: 3px; font-size: 12px; }
 
-/* Draggable edge to resize the résumé panel */
+/* Draggable edge to resize the resume panel */
 .resume-resize {
   position: absolute;
   left: -3px;
@@ -956,7 +1185,7 @@
   background: var(--accent);
 }
 
-/* Two-column résumé rows (Company | Dates, Title | Location) */
+/* Two-column resume rows (Company | Dates, Title | Location) */
 .resume-doc-rendered .rz-row {
   display: flex;
   justify-content: space-between;

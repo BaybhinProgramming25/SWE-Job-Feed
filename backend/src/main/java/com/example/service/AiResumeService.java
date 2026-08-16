@@ -54,6 +54,12 @@ public class AiResumeService {
 
         %s
 
+        In the Projects section, remove any hyperlinks or URLs that appear next to
+        a project's title or tech stack (GitHub, repo, demo, or live-site links).
+        Keep the project name, its tech stack, and its description — just drop
+        those links. This rule applies ONLY to projects: keep the contact links in
+        the header (email, GitHub, LinkedIn) exactly as they are.
+
         Output only the Markdown, with no preamble or commentary.""".formatted(ENTRY_FORMAT);
 
     private static final String TAILOR_SYSTEM = """
